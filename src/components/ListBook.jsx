@@ -11,9 +11,17 @@ import SearchBar from './SearchBar';
 
 export default function ListBook() {
     const [books, setBooks] = useState([]);
-    const [showModal, setShowModal] = useState(false);
+    const [showModalModify, setShowModalModify] = useState(false);
+    const [showModalAdd, setShowModalAdd] = useState(false);
     const [bookData, setBookData] = useState({
         id: '',
+        titre: '',
+        description: '',
+        auteur: '',
+        prix: '',
+    });
+
+    const [newBookData, setNewBookData] = useState({
         titre: '',
         description: '',
         auteur: '',
@@ -56,11 +64,11 @@ export default function ListBook() {
             auteur: book.auteur,
             prix: book.prix,
         });
-        setShowModal(true);
+        setShowModalModify(true);
     };
 
-    const closeModal = () => {
-        setShowModal(false);
+    const closeModalModify = () => {
+        setShowModalModify(false);
     };
 
     const handleChange = (e) => {
@@ -83,7 +91,7 @@ export default function ListBook() {
                 )
             );
 
-            closeModal();
+            closeModalModify();
         } catch (error) {
             console.error(error);
         }
@@ -94,19 +102,57 @@ export default function ListBook() {
         const lowercaseQuery = query.toLowerCase();
 
         const filteredBooks = books.filter((book) =>
-          book.titre.toLowerCase().includes(lowercaseQuery)
+            book.titre.toLowerCase().includes(lowercaseQuery)
         );
-      
-        setBooks(filteredBooks.length > 0 || lowercaseQuery === '' ? filteredBooks : []);
-      };
 
+        setBooks(filteredBooks.length > 0 || lowercaseQuery === '' ? filteredBooks : []);
+    };
+
+    // add data
+    const openAddModal = () => {
+        setNewBookData({
+            titre: '',
+            description: '',
+            auteur: '',
+            prix: '',
+        });
+        setShowModalAdd(true);
+    };
+
+    const handleNewBookChange = (e) => {
+        setNewBookData({
+            ...newBookData,
+            [e.target.name]: e.target.value,
+        });
+    };
+
+
+    const closeModalAdd = () => {
+        setShowModalAdd(false);
+    };
+    const handleAddBookSubmit = async (e) => {
+        e.preventDefault();
+        try {
+
+            const response = await axios.post('http://localhost:3000/book', newBookData);
+
+
+            setBooks([...books, response.data]);
+
+            closeModalAdd();
+        } catch (error) {
+            console.error(error);
+        }
+    };
 
     return (
         <>
-          <SearchBar handleSearch={handleSearch} />
-        
-            <Accordion className='w-25 my-5 mx-auto' defaultActiveKey={1}>
+            <SearchBar handleSearch={handleSearch}></SearchBar>
 
+            <Accordion className='w-25 mt-5 mx-auto' defaultActiveKey={1}>
+                <Button variant="primary" className='my-3' onClick={openAddModal}>
+                    Ajouter un livre
+                </Button>
                 {books.map((book) =>
                     <Accordion.Item key={book.id} eventKey={book.id}>
                         <Accordion.Header className='fw-bold'>
@@ -146,7 +192,7 @@ export default function ListBook() {
             </Accordion>
 
             {/* Modal pour modifier  */}
-            <Modal show={showModal} onHide={closeModal}>
+            <Modal show={showModalModify} onHide={closeModalModify}>
                 <Modal.Header closeButton>
                     <Modal.Title>Modifier le livre</Modal.Title>
                 </Modal.Header>
@@ -194,6 +240,65 @@ export default function ListBook() {
 
                         <Button variant="primary" className='mt-5' type="submit">
                             Valider
+                        </Button>
+                    </Form>
+                </Modal.Body>
+            </Modal>
+
+            {/* Modal add  */}
+
+            <Modal show={showModalAdd} onHide={closeModalAdd}>
+                <Modal.Header closeButton>
+                    <Modal.Title>Ajouter un livre</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <Form onSubmit={handleAddBookSubmit}>
+                        <Form.Group controlId="formTitre">
+                            <Form.Label>Titre</Form.Label>
+                            <Form.Control
+                                type="text"
+                                name="titre"
+                                value={newBookData.titre}
+                                onChange={handleNewBookChange}
+                                required
+                            />
+                        </Form.Group>
+
+                        <Form.Group controlId="formDescription">
+                            <Form.Label>Description</Form.Label>
+                            <Form.Control
+                                as="textarea"
+                                name="description"
+                                value={newBookData.description}
+                                onChange={handleNewBookChange}
+                                required
+                            />
+                        </Form.Group>
+
+                        <Form.Group controlId="formAuteur">
+                            <Form.Label>Auteur</Form.Label>
+                            <Form.Control
+                                type="text"
+                                name="auteur"
+                                value={newBookData.auteur}
+                                onChange={handleNewBookChange}
+                                required
+                            />
+                        </Form.Group>
+
+                        <Form.Group controlId="formPrix">
+                            <Form.Label>Prix</Form.Label>
+                            <Form.Control
+                                type="number"
+                                name="prix"
+                                value={newBookData.prix}
+                                onChange={handleNewBookChange}
+                                required
+                            />
+                        </Form.Group>
+
+                        <Button variant="primary" className="mt-5" type="submit">
+                            Ajouter
                         </Button>
                     </Form>
                 </Modal.Body>
